@@ -33,7 +33,7 @@ On macOS, GNURadio is typically installed via Conda or Radioconda since Homebrew
 conda activate base   # or whichever env has gnuradio
 
 # Install Python dependencies
-pip install Pillow
+pip install -r requirements.txt
 
 # Copy blocks into the conda environment
 cp -r gr-packet_utils/python/packet_utils \
@@ -54,7 +54,7 @@ On Linux, GNURadio is usually installed system-wide via package manager (`apt`, 
 sudo apt install gnuradio
 
 # Install Python dependencies
-pip install Pillow
+pip install -r requirements.txt
 
 # Find your GNURadio Python path
 GR_PYTHON=$(python3 -c "import gnuradio; import os; print(os.path.dirname(gnuradio.__path__[0]))")
@@ -83,7 +83,7 @@ sudo cp gr-packet_utils/grc/*.yml \
 
 ```bash
 # In Anaconda Prompt with your gnuradio environment active
-pip install Pillow
+pip install -r requirements.txt
 
 # Copy blocks
 xcopy /E /I gr-packet_utils\python\packet_utils ^
