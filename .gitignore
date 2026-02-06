@@ -1,0 +1,13 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# GNURadio generated
+*.py.bak
+
+# Video outputs (keep source videos, ignore received outputs)
+videos/*_output*

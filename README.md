@@ -114,6 +114,10 @@ Smart Source → Packet TX → [SDR / Channel] → Packet RX → Smart Sink
 - **Erasure coding**: Every 4 data packets are followed by 1 XOR parity packet, allowing recovery of any single lost packet per group
 - **Training sequence**: 400 idle packets at start for AGC and timing lock
 
+## Usage Notes
+
+- **Output filenames**: When configuring the Smart Sink, use `_output` in the filename (e.g. `1080p_output.mp4`). Output files with `_output` in the name are git-ignored to keep the repo clean.
+
 ## Flowgraph
 
 `Openlab.grc` contains a loopback test using a channel model (noise=0.2). The UHD B210 source/sink blocks are included but disabled — enable them for over-the-air transmission.
