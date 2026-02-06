@@ -16,7 +16,7 @@ Designed for USRP B210 and Pluto SDRs.
 ## Dependencies
 
 - GNURadio 3.10+
-- Python packages: `numpy`, `Pillow`
+- Python packages: `pip install -r requirements.txt`
 - `ffmpeg` on PATH (for video transcoding)
 
 ## Installation
