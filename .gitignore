@@ -10,4 +10,4 @@ __pycache__/
 *.py.bak
 
 # Video outputs (keep source videos, ignore received outputs)
-videos/*_output*
+videos/*output*

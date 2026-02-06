@@ -6,12 +6,12 @@ Designed for USRP B210 and Pluto SDRs.
 
 ## Blocks
 
-| Block | Description |
-|---|---|
-| **Smart Source** | Auto-detects file type and compresses (video→HEVC, image→JPEG, file→LZMA) |
-| **Smart Sink** | Receives and reconstructs the original file from the stream |
-| **Packet TX (Continuous)** | Encodes bytes into framed packets and GFSK-modulates to complex samples |
-| **Packet RX (Continuous)** | GFSK-demodulates, finds sync, decodes packets with FEC and erasure recovery |
+| Block                            | Description                                                                  |
+| -------------------------------- | ---------------------------------------------------------------------------- |
+| **Smart Source**           | Auto-detects file type and compresses (video→HEVC, image→JPEG, file→LZMA) |
+| **Smart Sink**             | Receives and reconstructs the original file from the stream                  |
+| **Packet TX (Continuous)** | Encodes bytes into framed packets and GFSK-modulates to complex samples      |
+| **Packet RX (Continuous)** | GFSK-demodulates, finds sync, decodes packets with FEC and erasure recovery  |
 
 ## Dependencies
 
@@ -36,12 +36,10 @@ conda activate base   # or whichever env has gnuradio
 pip install -r requirements.txt
 
 # Copy blocks into the conda environment
-cp -r gr-packet_utils/python/packet_utils \
-  $CONDA_PREFIX/lib/python3.10/site-packages/gnuradio/packet_utils
+cp -r gr-packet_utils/python/packet_utils $CONDA_PREFIX/lib/python3.10/site-packages/gnuradio/packet_utils
 
 # Copy GRC block definitions
-cp gr-packet_utils/grc/*.yml \
-  $CONDA_PREFIX/share/gnuradio/grc/blocks/
+cp gr-packet_utils/grc/*.yml $CONDA_PREFIX/share/gnuradio/grc/blocks/
 ```
 
 ### Linux (system install)
@@ -57,26 +55,22 @@ sudo apt install gnuradio
 pip install -r requirements.txt
 
 # Find your GNURadio Python path
-GR_PYTHON=$(python3 -c "import gnuradio; import os; print(os.path.dirname(gnuradio.__path__[0]))")
-GR_DATA=$(python3 -c "import gnuradio; import os; print(os.path.join(os.path.dirname(os.path.dirname(gnuradio.__path__[0])), 'share', 'gnuradio', 'grc', 'blocks'))")
+GR_PYTHON=$(python3 -c "import gnuradio, os; print(os.path.dirname(gnuradio.__path__[0]))") && echo $GR_PYTHON
+GR_DATA=$(python3 -c "from gnuradio import gr; import os; print(os.path.join(gr.prefix(), 'share', 'gnuradio', 'grc', 'blocks'))") && echo $GR_DATA
 
 # Copy blocks
-sudo cp -r gr-packet_utils/python/packet_utils \
-  $GR_PYTHON/gnuradio/packet_utils
+sudo cp -r gr-packet_utils/python/packet_utils $GR_PYTHON/gnuradio/packet_utils
 
 # Copy GRC block definitions
-sudo cp gr-packet_utils/grc/*.yml \
-  $GR_DATA/
+sudo cp gr-packet_utils/grc/*.yml $GR_DATA/
 ```
 
 Or if you know your prefix (commonly `/usr` or `/usr/local`):
 
 ```bash
-sudo cp -r gr-packet_utils/python/packet_utils \
-  /usr/lib/python3/dist-packages/gnuradio/packet_utils
+sudo cp -r gr-packet_utils/python/packet_utils /usr/lib/python3/dist-packages/gnuradio/packet_utils
 
-sudo cp gr-packet_utils/grc/*.yml \
-  /usr/share/gnuradio/grc/blocks/
+sudo cp gr-packet_utils/grc/*.yml /usr/share/gnuradio/grc/blocks/
 ```
 
 ### Windows (Conda / Radioconda)
@@ -86,12 +80,10 @@ sudo cp gr-packet_utils/grc/*.yml \
 pip install -r requirements.txt
 
 # Copy blocks
-xcopy /E /I gr-packet_utils\python\packet_utils ^
-  %CONDA_PREFIX%\Lib\site-packages\gnuradio\packet_utils
+xcopy /E /I gr-packet_utils\python\packet_utils %CONDA_PREFIX%\Lib\site-packages\gnuradio\packet_utils
 
 # Copy GRC block definitions
-copy gr-packet_utils\grc\*.yml ^
-  %CONDA_PREFIX%\share\gnuradio\grc\blocks\
+copy gr-packet_utils\grc\*.yml %CONDA_PREFIX%\share\gnuradio\grc\blocks\
 ```
 
 ### Verify installation
@@ -116,7 +108,7 @@ Smart Source → Packet TX → [SDR / Channel] → Packet RX → Smart Sink
 
 ## Usage Notes
 
-- **Output filenames**: When configuring the Smart Sink, use `_output` in the filename (e.g. `1080p_output.mp4`). Output files with `_output` in the name are git-ignored to keep the repo clean.
+- **Output filenames**: When configuring the Smart Sink, use `output` in the filename (e.g. `1080p_output.mp4`). Output files with `output` in the name are git-ignored to keep the repo clean.
 
 ## Flowgraph
 
