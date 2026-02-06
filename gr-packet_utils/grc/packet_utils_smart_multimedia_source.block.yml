@@ -1,0 +1,45 @@
+id: packet_utils_smart_multimedia_source
+label: Smart Source
+category: '[packet_utils]'
+
+templates:
+  imports: from gnuradio import packet_utils
+  make: packet_utils.smart_multimedia_source(filename=${filename}, repeat=${repeat}, video_bitrate=${video_bitrate}, image_quality=${image_quality})
+
+parameters:
+- id: filename
+  label: Input File
+  dtype: file_open
+
+- id: repeat
+  label: Repeat
+  dtype: bool
+  default: 'False'
+  options: ['True', 'False']
+
+- id: video_bitrate
+  label: Video Bitrate
+  dtype: string
+  default: '500k'
+  hide: ${ ('none' if 'video' in filename.lower() else 'part') }
+
+- id: image_quality
+  label: Image Quality (1-95)
+  dtype: int
+  default: '75'
+  hide: ${ ('none' if 'jpg' in filename.lower() or 'png' in filename.lower() else 'part') }
+
+outputs:
+- label: out
+  domain: stream
+  dtype: byte
+
+documentation: |-
+  Smart Multimedia Source (V4.4).
+  Automatically detects file type and applies optimal compression:
+  - Video -> HEVC (H.265) + AAC
+  - Image -> JPEG
+  - General File -> LZMA (XZ)
+  Prepends a format signature for the Smart Sink.
+
+file_format: 1

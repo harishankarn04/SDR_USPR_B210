@@ -1,0 +1,27 @@
+id: packet_utils_smart_multimedia_sink
+label: Smart Sink
+category: '[packet_utils]'
+
+templates:
+  imports: from gnuradio import packet_utils
+  make: packet_utils.smart_multimedia_sink(filename=${filename})
+
+parameters:
+- id: filename
+  label: Output Filename (Base)
+  dtype: file_save
+
+inputs:
+- label: in
+  domain: stream
+  dtype: byte
+
+documentation: |-
+  Smart Multimedia Sink (V4.4).
+  Automatically handles different stream types from the Smart Source:
+  - Automatically appends .ts for video
+  - Automatically appends .jpg for images
+  - Auto-decompresses LZMA files
+  The output is a ready-to-use file.
+
+file_format: 1

@@ -1,0 +1,46 @@
+id: packet_utils_packet_tx_continuous
+label: Easy Packet TX (Continuous V4.1)
+category: '[packet_utils]'
+
+templates:
+  imports: from gnuradio import packet_utils
+  make: packet_utils.packet_tx_continuous(preamble=${preamble}, sync_word=${sync_word}, samples_per_symbol=${samples_per_symbol}, sensitivity=${sensitivity}, bt=${bt})
+
+parameters:
+- id: preamble
+  label: Preamble
+  dtype: int
+  default: '0xAAAAAAAA'
+- id: sync_word
+  label: Sync Word
+  dtype: int
+  default: '0xDEADBEEF'
+- id: samples_per_symbol
+  label: Samples per Symbol
+  dtype: int
+  default: '2'
+- id: sensitivity
+  label: Sensitivity
+  dtype: float
+  default: '1.0'
+- id: bt
+  label: BT
+  dtype: float
+  default: '0.35'
+
+inputs:
+- label: in
+  domain: stream
+  dtype: byte
+
+outputs:
+- label: out
+  domain: stream
+  dtype: complex
+
+documentation: |-
+  Continuous version of Easy Packet TX.
+  Based on V3.5 architecture but will NOT terminate the flowgraph.
+  It resets to training state after transmission.
+
+file_format: 1

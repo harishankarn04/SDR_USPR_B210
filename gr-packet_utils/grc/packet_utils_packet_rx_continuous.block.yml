@@ -1,0 +1,38 @@
+id: packet_utils_packet_rx_continuous
+label: Easy Packet RX (Continuous V4.1)
+category: '[packet_utils]'
+
+templates:
+  imports: from gnuradio import packet_utils
+  make: packet_utils.packet_rx_continuous(sync_word=${sync_word}, samples_per_symbol=${samples_per_symbol}, sensitivity=${sensitivity})
+
+parameters:
+- id: sync_word
+  label: Sync Word
+  dtype: int
+  default: '0xDEADBEEF'
+- id: samples_per_symbol
+  label: Samples per Symbol
+  dtype: int
+  default: '2'
+- id: sensitivity
+  label: Sensitivity
+  dtype: float
+  default: '1.0'
+
+inputs:
+- label: in
+  domain: stream
+  dtype: complex
+
+outputs:
+- label: out
+  domain: stream
+  dtype: byte
+
+documentation: |-
+  Continuous version of Easy Packet RX.
+  Based on V3.5 architecture but will NOT terminate the flowgraph.
+  It resets to inactive state after receiving an END packet.
+
+file_format: 1
