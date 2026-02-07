@@ -36,7 +36,8 @@ conda activate base   # or whichever env has gnuradio
 pip install -r requirements.txt
 
 # Copy blocks into the conda environment
-cp -r gr-packet_utils/python/packet_utils $CONDA_PREFIX/lib/python3.10/site-packages/gnuradio/packet_utils
+GR_CONDA=$(python3 -c "import gnuradio, os; print(os.path.dirname(gnuradio.__path__[0]))") && echo $GR_CONDA
+cp -r gr-packet_utils/python/packet_utils $GR_CONDA/gnuradio/packet_utils
 
 # Copy GRC block definitions
 cp gr-packet_utils/grc/*.yml $CONDA_PREFIX/share/gnuradio/grc/blocks/
