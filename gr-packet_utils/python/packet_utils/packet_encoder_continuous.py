@@ -74,6 +74,10 @@ class packet_encoder_continuous(gr.basic_block):
         return bytes(frame)
 
     def general_work(self, input_items, output_items):
+        if self.state == "FINISHED":
+            self.consume(0, len(input_items[0]))
+            return -1
+
         in_buf = input_items[0]
         out_buf = output_items[0]
         produced = 0

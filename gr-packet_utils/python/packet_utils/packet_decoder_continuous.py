@@ -2,6 +2,7 @@
 import numpy as np
 from gnuradio import gr
 import sys
+import time
 import binascii
 from .fec_utils import Scrambler, Hamming74
 
@@ -42,6 +43,7 @@ class packet_decoder_continuous(gr.basic_block):
         self.parity_rx = 0
         self.recovered_rx = 0
         self.crc_fail = 0
+        self._last_print = 0
 
         # Pre-compute bit representations of sync bytes for faster bit-flip matching
         self.sync_bits = np.unpackbits(np.frombuffer(self.sync_bytes, dtype=np.uint8))
@@ -54,13 +56,17 @@ class packet_decoder_continuous(gr.basic_block):
         if rem != 0: shifted_bits = shifted_bits[:-rem]
         return np.packbits(shifted_bits).tobytes()
 
-    def _print_status(self):
+    def _print_status(self, force=False):
+        now = time.monotonic()
+        if not force and (now - self._last_print) < 2.0:
+            return
+        self._last_print = now
         state = "RECEIVING" if self.active else "TRAINING"
-        line = (f"\r[RX] {state} | train: {self.training_rx}  start: {self.start_rx}  "
-                f"data: {self.data_rx}  parity: {self.parity_rx}  "
-                f"recovered: {self.recovered_rx}  crc_fail: {self.crc_fail}  ")
-        sys.stderr.write(line)
-        sys.stderr.flush()
+        sys.stderr.write(
+            f"[RX] {state} | train: {self.training_rx}  start: {self.start_rx}  "
+            f"data: {self.data_rx}  parity: {self.parity_rx}  "
+            f"recovered: {self.recovered_rx}  crc_fail: {self.crc_fail}\n"
+        )
 
     def flush_group(self, output_items, produced):
         """Reconstructs missing packet if possible and flushes buffer."""
@@ -157,10 +163,10 @@ class packet_decoder_continuous(gr.basic_block):
                     self.active = True
                     self.current_group_id = -1
                     self.group_buffer.clear()
-                    self._print_status()
+                    self._print_status(force=True)
                     return required, 0
                 if type_byte == 0x03: # END
-                    self._print_status()
+                    self._print_status(force=True)
                     sys.stderr.write("\n[RX] Stream ended.\n")
                     self.active = False
                     self.finished = True
