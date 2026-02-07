@@ -130,6 +130,14 @@ def main(top_block_cls=Openlab, options=None):
     signal.signal(signal.SIGINT, sig_handler)
     signal.signal(signal.SIGTERM, sig_handler)
 
+    # Auto-close when flowgraph finishes (e.g. source done + END packets received)
+    def monitor():
+        tb.wait()
+        Qt.QApplication.quit()
+
+    monitor_thread = threading.Thread(target=monitor, daemon=True)
+    monitor_thread.start()
+
     timer = Qt.QTimer()
     timer.start(500)
     timer.timeout.connect(lambda: None)
