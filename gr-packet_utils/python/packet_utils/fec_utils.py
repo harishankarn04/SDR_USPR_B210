@@ -51,3 +51,7 @@ class Hamming74:
 
 def get_crc32(data):
     return binascii.crc32(data) & 0xFFFFFFFF
+
+# 10-byte sentinel the source appends after the flush tail.
+# The encoder watches for this pattern to trigger END packets.
+EOF_SENTINEL = bytes([0xDE, 0xAD, 0xBE, 0xEF, 0xCA, 0xFE, 0xBA, 0xBE, 0xF0, 0x0D])
