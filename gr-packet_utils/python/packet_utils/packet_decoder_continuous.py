@@ -27,12 +27,22 @@ class packet_decoder_continuous(gr.basic_block):
             
         self.active = False
         self.current_shift = 0
-        
+
         # Erasure Coding Buffer
         self.current_group_id = -1
         self.group_buffer = {} # SlotID -> 10-byte Payload
         self.parity_group_size = 4
-        
+
+        self.finished = False
+
+        # Status counters
+        self.training_rx = 0
+        self.start_rx = 0
+        self.data_rx = 0
+        self.parity_rx = 0
+        self.recovered_rx = 0
+        self.crc_fail = 0
+
         # Pre-compute bit representations of sync bytes for faster bit-flip matching
         self.sync_bits = np.unpackbits(np.frombuffer(self.sync_bytes, dtype=np.uint8))
 
@@ -43,6 +53,14 @@ class packet_decoder_continuous(gr.basic_block):
         rem = len(shifted_bits) % 8
         if rem != 0: shifted_bits = shifted_bits[:-rem]
         return np.packbits(shifted_bits).tobytes()
+
+    def _print_status(self):
+        state = "RECEIVING" if self.active else "TRAINING"
+        line = (f"\r[RX] {state} | train: {self.training_rx}  start: {self.start_rx}  "
+                f"data: {self.data_rx}  parity: {self.parity_rx}  "
+                f"recovered: {self.recovered_rx}  crc_fail: {self.crc_fail}  ")
+        sys.stderr.write(line)
+        sys.stderr.flush()
 
     def flush_group(self, output_items, produced):
         """Reconstructs missing packet if possible and flushes buffer."""
@@ -76,7 +94,7 @@ class packet_decoder_continuous(gr.basic_block):
             
             # Store recovered
             self.group_buffer[missing_idx] = recovered
-            sys.stderr.write(f"R") # Reconstructed indicator
+            self.recovered_rx += 1
             
             # Flush all
             for i in range(self.parity_group_size):
@@ -131,36 +149,47 @@ class packet_decoder_continuous(gr.basic_block):
                 
                 # Handle Signals
                 if type_byte == 0x00: # TRAINING
-                    sys.stderr.write(".")
+                    self.training_rx += 1
+                    self._print_status()
                     return required, 0
                 if type_byte == 0x02: # START
-                    sys.stderr.write("S")
+                    self.start_rx += 1
                     self.active = True
                     self.current_group_id = -1
                     self.group_buffer.clear()
+                    self._print_status()
                     return required, 0
                 if type_byte == 0x03: # END
-                    sys.stderr.write("E\n")
+                    self._print_status()
+                    sys.stderr.write("\n[RX] Stream ended.\n")
                     self.active = False
+                    self.finished = True
                     # Flush pending
                     total_produced += self.flush_group(output_items, produced)
                     return required, total_produced
                 
                 # Handle Data/Parity
                 if self.active and (type_byte == 0x01 or type_byte == 0x05):
+                    if type_byte == 0x01:
+                        self.data_rx += 1
+                    else:
+                        self.parity_rx += 1
                     # Check for group change
                     if group_id != self.current_group_id:
                         if self.current_group_id != -1:
                             total_produced += self.flush_group(output_items, produced)
                         self.current_group_id = group_id
-                    
+
                     # Store in buffer
                     # Payload for Parity (Type 5) IS the decoded bytes (XOR sum)
                     # Payload for Data (Type 1) IS the decoded bytes
                     self.group_buffer[slot_id] = decoded
-                    
+                    self._print_status()
+
                 return required, total_produced
             else:
+                self.crc_fail += 1
+                self._print_status()
                 return 0, 0
         return 0, 0
 
@@ -182,10 +211,14 @@ class packet_decoder_continuous(gr.basic_block):
         return -1, 0
 
     def general_work(self, input_items, output_items):
+        if self.finished:
+            self.consume(0, len(input_items[0]))
+            return -1
+
         in_buf = input_items[0]
         out_buf = output_items[0]
         produced = 0
-        
+
         # CRITICAL FIX: Always consume input to prevent hanging
         # If we don't have enough data, consume what we have and wait for more
         if len(in_buf) < 48:
