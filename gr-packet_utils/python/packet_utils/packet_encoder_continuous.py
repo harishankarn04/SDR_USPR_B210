@@ -3,7 +3,7 @@ import numpy as np
 from gnuradio import gr
 import sys
 import binascii
-from .fec_utils import Scrambler, Hamming74
+from .fec_utils import Scrambler, Hamming74, EOF_SENTINEL
 
 class packet_encoder_continuous(gr.basic_block):
     """
@@ -24,7 +24,9 @@ class packet_encoder_continuous(gr.basic_block):
         
         self.state = "TRAINING"
         self.training_count = 400
-        
+        self.end_count = 50
+        self.eof_sentinel = list(EOF_SENTINEL)
+
         # Erasure Coding State
         self.group_id = 0
         self.parity_group_size = 4
@@ -94,21 +96,33 @@ class packet_encoder_continuous(gr.basic_block):
                 self.start_count -= 1
             if self.start_count == 0:
                 self.state = "DATA"
-                sys.stderr.write("\n[V4.2 Robust] Training/Start sequence finished. Now transmitting payload (N+1 Parity)...\n")
+                sys.stderr.write("\n[TX] Training/Start finished. Transmitting data...\n")
                 self.group_id = 1 # Start data from Group 1
                 self.slot_counter = 0
                 self.parity_buffer = bytearray(10) # Input is 10 bytes
             
         if self.state == "DATA":
             while input_idx < len(in_buf) and produced < len(out_buf):
+                # Check if this input vector is the EOF sentinel
+                if in_buf[input_idx].tolist() == self.eof_sentinel:
+                    # Flush remaining parity for the current group
+                    if self.slot_counter > 0 and produced < len(out_buf):
+                        parity_payload = list(self.parity_buffer)
+                        out_buf[produced, :] = np.frombuffer(
+                            self.make_packet(parity_payload, 0x05, self.group_id, self.slot_counter),
+                            dtype=np.uint8
+                        )
+                        produced += 1
+                    self.state = "END"
+                    input_idx += 1
+                    break
+
                 # We need to potentially output PARITY packet if slot_counter == N
                 if self.slot_counter == self.parity_group_size:
                     # Time to send PARITY
-                    # Send Parity Packet (Type 0x05)
-                    # Payload is the XOR sum of inputs
                     parity_payload = list(self.parity_buffer)
                     out_buf[produced, :] = np.frombuffer(
-                        self.make_packet(parity_payload, 0x05, self.group_id, self.slot_counter), 
+                        self.make_packet(parity_payload, 0x05, self.group_id, self.slot_counter),
                         dtype=np.uint8
                     )
                     produced += 1
@@ -120,30 +134,31 @@ class packet_encoder_continuous(gr.basic_block):
                 else:
                     # Send DATA packet
                     data = in_buf[input_idx].tolist()
-                    
+
                     # Update Parity
                     for i in range(10):
                         self.parity_buffer[i] ^= data[i]
-                    
+
                     out_buf[produced, :] = np.frombuffer(
-                        self.make_packet(data, 0x01, self.group_id, self.slot_counter), 
+                        self.make_packet(data, 0x01, self.group_id, self.slot_counter),
                         dtype=np.uint8
                     )
                     produced += 1
                     input_idx += 1
                     self.slot_counter += 1
-            
-            if len(in_buf) == 0 and produced < len(out_buf):
-                # self.state = "END" # Only move to end if really done
-                pass
-                
+
         if self.state == "END":
-            if produced < len(out_buf):
+            while self.end_count > 0 and produced < len(out_buf):
                 out_buf[produced, :] = np.frombuffer(self.make_packet([0x55]*10, 0x03), dtype=np.uint8)
                 produced += 1
-                sys.stderr.write("[V4.0 Robust] End Signal Sent. Resetting.\n")
-                self.state = "TRAINING"
-                self.training_count = 200
+                self.end_count -= 1
+            if self.end_count == 0:
+                sys.stderr.write("\n[TX] End signal sent. Transmission complete.\n")
+                self.state = "FINISHED"
+
+        if self.state == "FINISHED":
+            # Consume remaining sentinel vectors, produce nothing
+            input_idx = len(in_buf)
         
         self.consume(0, input_idx)
         return produced
