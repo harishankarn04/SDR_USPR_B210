@@ -58,6 +58,10 @@ pip install -r requirements.txt
 GR_PYTHON=$(python3 -c "import gnuradio, os; print(os.path.dirname(gnuradio.__path__[0]))") && echo $GR_PYTHON
 GR_DATA=$(python3 -c "from gnuradio import gr; import os; print(os.path.join(gr.prefix(), 'share', 'gnuradio', 'grc', 'blocks'))") && echo $GR_DATA
 
+# Verify paths exist
+test -d "$GR_PYTHON/gnuradio" && echo "Python path OK" || { echo "ERROR: $GR_PYTHON/gnuradio not found"; exit 1; }
+test -d "$GR_DATA" && echo "GRC path OK" || { echo "ERROR: $GR_DATA not found"; exit 1; }
+
 # Copy blocks
 sudo cp -r gr-packet_utils/python/packet_utils $GR_PYTHON/gnuradio/packet_utils
 
@@ -65,26 +69,13 @@ sudo cp -r gr-packet_utils/python/packet_utils $GR_PYTHON/gnuradio/packet_utils
 sudo cp gr-packet_utils/grc/*.yml $GR_DATA/
 ```
 
-Or if you know your prefix (commonly `/usr` or `/usr/local`):
+<!-- Or if you know your prefix (commonly `/usr` or `/usr/local`):
 
 ```bash
 sudo cp -r gr-packet_utils/python/packet_utils /usr/lib/python3/dist-packages/gnuradio/packet_utils
 
 sudo cp gr-packet_utils/grc/*.yml /usr/share/gnuradio/grc/blocks/
-```
-
-### Windows (Conda / Radioconda)
-
-```bash
-# In Anaconda Prompt with your gnuradio environment active
-pip install -r requirements.txt
-
-# Copy blocks
-xcopy /E /I gr-packet_utils\python\packet_utils %CONDA_PREFIX%\Lib\site-packages\gnuradio\packet_utils
-
-# Copy GRC block definitions
-copy gr-packet_utils\grc\*.yml %CONDA_PREFIX%\share\gnuradio\grc\blocks\
-```
+``` -->
 
 ### Verify installation
 
