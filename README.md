@@ -50,7 +50,7 @@ On Linux, GNURadio is usually installed system-wide via package manager (`apt`, 
 ```bash
 # Install GNURadio if not already installed
 # Ubuntu/Debian:
-sudo apt install gnuradio
+sudo apt install gnuradio ffmpeg
 
 # Install Python dependencies
 pip install -r requirements.txt
