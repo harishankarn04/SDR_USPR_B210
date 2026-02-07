@@ -6,6 +6,7 @@ import io
 import lzma
 from PIL import Image
 import mimetypes
+from .fec_utils import EOF_SENTINEL
 
 class smart_multimedia_source(gr.basic_block):
     """
@@ -50,6 +51,11 @@ class smart_multimedia_source(gr.basic_block):
             # Add Large Flush Tail (4000 bytes)
             # Smart Source flows through more buffers, so we add extra "lead-out"
             self.data += b"\x00" * 4000
+
+            # Append EOF sentinel (50 copies for reliability)
+            # The encoder recognizes this pattern and sends END packets
+            self.data += EOF_SENTINEL * 50
+
             print(f"[Smart Source] Final Payload with Flush Tail: {len(self.data)} bytes (Ready for SDR)")
 
     def process_video(self, filename, bitrate):
