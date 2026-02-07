@@ -11,3 +11,6 @@ __pycache__/
 
 # Video outputs (keep source videos, ignore received outputs)
 videos/*output*
+
+# Machine scripts
+deploy.sh
